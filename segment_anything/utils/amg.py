@@ -317,16 +317,18 @@ def batched_mask_to_box(masks: torch.Tensor) -> torch.Tensor:
     else:
         masks = masks.unsqueeze(0)
 
+    masks = masks.int()  # required by MPS
+
     # Get top and bottom edges
     in_height, _ = torch.max(masks, dim=-1)
-    in_height_coords = in_height * torch.arange(h, device=in_height.device)[None, :]
+    in_height_coords = in_height * torch.arange(h, dtype=torch.int32, device=in_height.device)[None, :]
     bottom_edges, _ = torch.max(in_height_coords, dim=-1)
     in_height_coords = in_height_coords + h * (~in_height)
     top_edges, _ = torch.min(in_height_coords, dim=-1)
 
     # Get left and right edges
     in_width, _ = torch.max(masks, dim=-2)
-    in_width_coords = in_width * torch.arange(w, device=in_width.device)[None, :]
+    in_width_coords = in_width * torch.arange(w, dtype=torch.int32, device=in_width.device)[None, :]
     right_edges, _ = torch.max(in_width_coords, dim=-1)
     in_width_coords = in_width_coords + w * (~in_width)
     left_edges, _ = torch.min(in_width_coords, dim=-1)
